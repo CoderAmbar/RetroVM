@@ -1,0 +1,25 @@
+[package]
+name = "retro_vm"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.98"
+bevy = "0.16.1"
+chrono = "0.4.41"
+eframe = "0.31.1"
+egui = "0.31.1"
+image = "0.25.6"
+ordered-float = "5.0.0"
+pixels = "0.15.0"
+rfd = "0.15.3"
+whoami = "1.6.0"
+winit = "0.29.15"
+winit_input_helper = "0.16.0"
+macroquad = "0.4.14"
+pollster = "0.4.0"
+futures = "0.3.31"
+clap = { version = "4.5.40", features = ["derive"] }
+colored = "3.0.0"
+dialoguer = "0.11.0"
+indicatif = "0.18.0"
