@@ -242,6 +242,7 @@ pub struct ChessGame {
     key_released: bool,
 }
 
+
 impl ChessGame {
     pub async fn new() -> Self {
         Self {
@@ -254,13 +255,22 @@ impl ChessGame {
         }
     }
 
-    pub fn update(&mut self) {
-        if is_key_pressed(KeyCode::Escape) && self.current_screen != GameScreen::GameMenu {
-            self.current_screen = GameScreen::GameMenu;
+    pub fn update(&mut self) -> GameStatus {
+        // Check game state first
+        if is_checkmate(&self.game_state.board, !self.game_state.is_white_turn, &self.game_state) {
+            self.game_state.game_over = true;
+            return GameStatus::Checkmate;
         }
 
-        match self.current_screen {
-            GameScreen::GameMenu => {
+        // Handle global key shortcuts
+        if is_key_pressed(KeyCode::Y) && self.current_screen != GameScreen::GameMenu {
+            self.current_screen = GameScreen::GameMenu;
+            return GameStatus::Playing;
+        }
+
+        // Handle current screen logic
+            match self.current_screen {
+                GameScreen::GameMenu => {
                 let buttons = [
                     Rect::new(screen_width() * 0.1, screen_height() * 0.4, screen_width() * 0.15, screen_height() * 0.075),
                     Rect::new(screen_width() * 0.1, screen_height() * 0.4 + screen_height() * 0.075 + screen_height() * 0.028, screen_width() * 0.15, screen_height() * 0.075),
@@ -269,15 +279,17 @@ impl ChessGame {
                     Rect::new(screen_width() * 0.1, screen_height() * 0.4 + 4.0 * (screen_height() * 0.075 + screen_height() * 0.028), screen_width() * 0.15, screen_height() * 0.075),
                 ];
 
+                // Handle mouse/keyboard navigation
                 let mouse_pos = mouse_position();
-                static mut PREV_MOUSE_POS: (f32, f32) = (0.0, 0.0);
                 unsafe {
+                    static mut PREV_MOUSE_POS: (f32, f32) = (0.0, 0.0);
                     if mouse_pos.0 != PREV_MOUSE_POS.0 || mouse_pos.1 != PREV_MOUSE_POS.1 {
                         self.using_keyboard = false;
+                        PREV_MOUSE_POS = mouse_pos;
                     }
-                    PREV_MOUSE_POS = mouse_pos;
                 }
 
+                // Keyboard selection
                 if is_key_down(KeyCode::Down) && self.key_released {
                     self.selected_button = (self.selected_button + 1) % 5;
                     self.key_released = false;
@@ -290,75 +302,71 @@ impl ChessGame {
                     self.key_released = true;
                 }
 
-                if is_key_pressed(KeyCode::Enter) {
+                // Handle selections
+                if is_key_pressed(KeyCode::Enter) || 
+                (is_mouse_button_pressed(MouseButton::Left)) && 
+                buttons.iter().enumerate().any(|(i, btn)| {
+                    if is_point_in_rect(mouse_pos.0, mouse_pos.1, btn.x, btn.y, btn.w, btn.h) {
+                        self.selected_button = i;
+                        true
+                    } else {
+                        false
+                    }
+                }) 
+                {
                     match self.selected_button {
                         0 => {
                             self.current_screen = GameScreen::NewGame;
                             self.game_state.reset();
                         }
-                        1 => {
-                            if self.game_state.load().is_ok() {
-                                self.current_screen = GameScreen::NewGame;
-                            }
-                        }
+                        1 => if self.game_state.load().is_ok() {
+                            self.current_screen = GameScreen::NewGame;
+                        },
                         2 => self.current_screen = GameScreen::ThemeSettings,
                         3 => self.current_screen = GameScreen::GameSettings,
-                        4 => self.current_screen = GameScreen::Exit,
+                        4 => return GameStatus::Exit,
                         _ => {}
                     }
                 }
-
-                if is_mouse_button_pressed(MouseButton::Left) {
-                    for (i, button) in buttons.iter().enumerate() {
-                        if is_point_in_rect(mouse_pos.0, mouse_pos.1, button.x, button.y, button.w, button.h) {
-                            self.selected_button = i;
-                            self.using_keyboard = false;
-                            match i {
-                                0 => {
-                                    self.current_screen = GameScreen::NewGame;
-                                    self.game_state.reset();
-                                }
-                                1 => {
-                                    if self.game_state.load().is_ok() {
-                                        self.current_screen = GameScreen::NewGame;
-                                    }
-                                }
-                                2 => self.current_screen = GameScreen::ThemeSettings,
-                                3 => self.current_screen = GameScreen::GameSettings,
-                                4 => self.current_screen = GameScreen::Exit,
-                                _ => {}
-                            }
-                            break;
-                        }
-                    }
-                }
-            }
+            },
+            
             GameScreen::NewGame => {
                 self.handle_piece_movement();
-
-                let save_button = Rect::new(
-                    screen_width() - 150.0,
-                    20.0,
-                    120.0,
-                    40.0,
-                );
-                let save_hovered = is_point_in_rect(mouse_position().0, mouse_position().1, save_button.x, save_button.y, save_button.w, save_button.h);
-
-                if save_hovered && is_mouse_button_pressed(MouseButton::Left) {
+                
+                // Handle save game button
+                let save_btn = Rect::new(screen_width() - 150.0, 20.0, 120.0, 40.0);
+                if is_point_in_rect(mouse_position().0, mouse_position().1, save_btn.x, save_btn.y, save_btn.w, save_btn.h) 
+                    && is_mouse_button_pressed(MouseButton::Left) 
+                {
                     let _ = self.game_state.save();
                 }
-            }
+            },
+            GameScreen::PreviousGame => {
+                // Add handling for PreviousGame screen
+                self.handle_piece_movement();
+                
+                // You might want to add a "Return to Menu" button or similar
+                let back_btn = Rect::new(20.0, 20.0, 120.0, 40.0);
+                if is_point_in_rect(mouse_position().0, mouse_position().1, back_btn.x, back_btn.y, back_btn.w, back_btn.h) 
+                    && is_mouse_button_pressed(MouseButton::Left) 
+                {
+                    self.current_screen = GameScreen::GameMenu;
+                }
+            },
             GameScreen::GameSettings => {
                 self.current_screen = self.draw_game_settings();
-            }
+            },
+            
             GameScreen::ThemeSettings => {
                 self.current_screen = self.draw_theme_settings();
-            }
+            },
+            
             GameScreen::Exit => {
-                // Exit is handled by the parent application
+                return GameStatus::Exit;
             }
-            _ => {}
         }
+
+        GameStatus::Playing
     }
 
     pub fn draw(&self) {
@@ -1120,6 +1128,13 @@ impl ChessGame {
     }
 }
 
+pub enum GameStatus {
+    Playing,
+    Checkmate,
+    Exit,
+}
+
+
 // All the helper functions (is_valid_move, would_be_in_check, can_castle, is_king_in_check, is_checkmate, is_point_in_rect)
 // remain exactly the same as in your original code, just moved inside the impl ChessGame block
 
@@ -1365,21 +1380,41 @@ fn is_king_in_check(board: &[[i32; 8]; 8], is_white: bool, game_state: &ChessGam
 }
 
 fn is_checkmate(board: &[[i32; 8]; 8], is_white: bool, game_state: &ChessGameState) -> bool {
+    // Must be in check first
     if !is_king_in_check(board, is_white, game_state) {
         return false;
     }
 
+    // Check all possible moves for all pieces of current color
     for start_row in 0..8 {
         for start_col in 0..8 {
-            let piece = board[start_row as usize][start_col as usize];
-            if piece != 0 && ((is_white && piece > 0) || (!is_white && piece < 0)) {
-                for end_row in 0..8 {
-                    for end_col in 0..8 {
-                        let mut temp_board = *board;
-                        let captured_piece = temp_board[end_row as usize][end_col as usize];
-                        temp_board[end_row as usize][end_col as usize] = piece;
-                        temp_board[start_row as usize][start_col as usize] = 0;
+            let piece = board[start_row][start_col];
+            
+            // Skip empty squares and opponent pieces
+            if piece == 0 || (is_white && piece < 0) || (!is_white && piece > 0) {
+                continue;
+            }
 
+            // Check all possible destination squares
+            for end_row in 0..8 {
+                for end_col in 0..8 {
+                    // Only check valid moves
+                    if is_valid_move(
+                        board, 
+                        piece, 
+                        start_row as i32, 
+                        start_col as i32, 
+                        end_row as i32, 
+                        end_col as i32, 
+                        game_state, 
+                        true
+                    ) {
+                        // Simulate the move
+                        let mut temp_board = *board;
+                        temp_board[end_row][end_col] = piece;
+                        temp_board[start_row][start_col] = 0;
+
+                        // If this move gets out of check, it's not checkmate
                         if !is_king_in_check(&temp_board, is_white, game_state) {
                             return false;
                         }
@@ -1388,7 +1423,8 @@ fn is_checkmate(board: &[[i32; 8]; 8], is_white: bool, game_state: &ChessGameSta
             }
         }
     }
-
+    
+    // No legal moves found that get out of check
     true
 }
 
