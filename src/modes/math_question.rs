@@ -103,9 +103,6 @@ impl MathQuestion {
             hacker_mode.update();
             
             // Check for escape to exit hacker mode
-            if is_key_pressed(KeyCode::Escape) {
-                self.hacker_mode = None;
-            }
             return false;
         }
 
