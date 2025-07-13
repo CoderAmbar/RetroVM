@@ -214,9 +214,7 @@ Step-by-Step Installation
     Follow installation steps for your OS.
     
     After installation, run:
-   
-     $ ollama run mistral
-    (or whichever model you use, like llama2, codellama, etc.)
+     `ollama run mistral`
   
   Ensure Ollama is running before starting Retro VM.
 
