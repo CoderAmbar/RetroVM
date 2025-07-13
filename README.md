@@ -208,13 +208,25 @@ Step-by-Step Installation
    - Place the QEMU binary in that folder:
      Example: /assets/qemu/qemu-system-x86_64
 
-6. CREATE QCOW2 VIRTUAL DISK
+6. INSTALL OLLAMA (FOR CHATBOT)
+    Download Ollama from: https://ollama.com
+    
+    Follow installation steps for your OS.
+    
+    After installation, run:
+   
+     $ ollama run mistral
+    (or whichever model you use, like llama2, codellama, etc.)
+  
+  Ensure Ollama is running before starting Retro VM.
+
+7. CREATE QCOW2 VIRTUAL DISK
    $ qemu-img create -f qcow2 assets/kali-linux.qcow2 30G
 
-7. BUILD THE PROJECT
+8. BUILD THE PROJECT
    $ cargo build --release
 
-8. RUN RETRO VM
+9. RUN RETRO VM
    $ cargo run
 
 Optional Notes
