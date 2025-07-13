@@ -17,7 +17,7 @@
 
 - **Ghost Mode:**
   - Shows ghost animation.
-  - Press `Shift + D` to launch **Kali Linux VM** using **QEMU** and a virtual disk (`.iso` or `.qcow2`).
+  - Press `Shift + D` to launch **Kali Linux VM** using **QEMU** and a virtual disk (`.iso` and `.qcow2`).
   - Provides a virtual penetration testing environment.
 
 ---
