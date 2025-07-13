@@ -10,13 +10,6 @@ A nostalgic pixel-art virtual machine management system with hidden features, re
 
 The gateway to your Retro VM experience, designed with a captivating retro visual style and intuitive navigation.
 
-#### Visual Design Elements
-* **Animated Night Sky**: A dynamic starfield with twinkling stars and subtle movement creates an immersive cosmic backdrop.
-* **Crescent Moon**: A meticulously crafted pixel-perfect moon sprite casts a soft, ethereal glow.
-* **Layered Clouds**: Multi-depth cloud formations provide a sense of vastness with smooth parallax scrolling.
-* **Mountain Silhouettes**: Detailed mountain ranges in the foreground establish depth perception.
-* **Color Transitions**: Smooth gradient transitions from deep blue to purple hues define the serene nocturnal theme.
-
 #### User Interface Components
 * **Mode Selection Buttons**: Two prominent, elegantly designed buttons offer distinct paths:
     * **Normal Mode Button**: Provides access to the standard VM interface and application suite.
@@ -260,18 +253,6 @@ A comprehensive text editor designed with a retro aesthetic, offering core and a
 ---
 
 ## 👻 Ghost Mode - Screen Saver & Secret Gateway
-
-A minimalist screen saver that subtly hides a powerful secret access point.
-
-### Visual Design
-* **Minimalist Aesthetic**: A clean, dark interface with minimal distractions.
-* **Animated Ghost Character**:
-    * Cute ghost sprite with blue eyes.
-    * Subtle floating animations.
-    * Smooth movement patterns.
-    * Breathing/pulsing effects.
-* **Dark Theme**: A deep black background with subtle gradients creates an ethereal atmosphere.
-* **Ambient Particles**: Floating dust motes and ethereal effects add to the mystic ambiance.
 
 ### Screen Saver Functionality
 * **Activation**: Automatically triggered after a period of inactivity.
