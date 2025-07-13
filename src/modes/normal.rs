@@ -45,6 +45,14 @@ enum AppType {
     Notepad,
 }
 
+struct Particle {
+    pos: Vec2,
+    vel: Vec2,
+    life: f32,
+    color: Color,
+    size: f32,
+}
+
 pub struct NormalMode {
     pub state: AppState,
     boot_start: f64,
@@ -52,7 +60,6 @@ pub struct NormalMode {
     icons: Vec<AppIcon>,
     password_input: String,
     virus_text: String,
-    virus_sound: Option<Sound>,
     welcome_timer: f32,
     esc_pressed: bool,
     desktop_particles: Vec<Particle>,
@@ -62,26 +69,18 @@ pub struct NormalMode {
     background_texture: Texture2D,
 }
 
-struct Particle {
-    pos: Vec2,
-    vel: Vec2,
-    life: f32,
-    color: Color,
-    size: f32,
-}
-
 impl NormalMode {
     pub async fn new() -> Self {
         let screen_w = screen_width();
         let screen_h = screen_height();
         let taskbar_height = 60.0;
         
-        // Load textures - fixed path separators (changed from backslashes to forward slashes)
+        // Load textures
         let background_texture = load_texture("assets/background.png")
             .await
             .unwrap_or_else(|_| panic!("Failed to load background texture"));
         
-        // Load icon textures with error handling
+        // Load icon textures
         let chatbot_icon = load_texture("assets/chatbot_icon.png")
             .await
             .unwrap_or_else(|_| panic!("Failed to load chatbot icon"));
@@ -104,16 +103,13 @@ impl NormalMode {
         let cols = 3;
         let rows = 2;
 
-        // Calculate total grid dimensions
+        // Calculate grid dimensions
         let grid_width = cols as f32 * icon_size + (cols as f32 - 1.0) * icon_spacing;
         let grid_height = rows as f32 * icon_size + (rows as f32 - 1.0) * icon_spacing;
-
-        // Center the grid on screen (ignoring taskbar for true center)
         let grid_start_x = (screen_w - grid_width) / 2.0;
         let grid_start_y = (screen_h - grid_height) / 2.0;
 
         let icons = vec![
-            // First row
             AppIcon {
                 rect: Rect::new(grid_start_x, grid_start_y, icon_size, icon_size),
                 label: "CHATBOT".to_string(),
@@ -141,7 +137,6 @@ impl NormalMode {
                 accent_color: Color::from_rgba(56, 155, 60, 255),
                 app_type: AppType::Chess,
             },
-            // Second row
             AppIcon {
                 rect: Rect::new(grid_start_x, grid_start_y + icon_size + icon_spacing, icon_size, icon_size),
                 label: "VEDIC MATH".to_string(),
@@ -169,7 +164,6 @@ impl NormalMode {
             icons,
             password_input: String::new(),
             virus_text: String::new(),
-            virus_sound: None,
             welcome_timer: 0.0,
             esc_pressed: false,
             desktop_particles: Vec::new(),
@@ -261,9 +255,6 @@ impl NormalMode {
 
                 if self.virus_text.trim().to_lowercase() == "stop" {
                     let _ = remove_file("VIRUS.txt");
-                    if let Some(sound) = &self.virus_sound {
-                        stop_sound(sound);
-                    }
                     std::process::exit(0);
                     return true;
                 }
@@ -387,11 +378,15 @@ impl NormalMode {
 
     async fn activate_virus(&mut self) {
         let _ = std::fs::write("VIRUS.txt", "VIRUS ACTIVATED! Type 'stop' to exit");
-
+        
+        // Remove sound-related code
+        
+        // Modified thread spawning code
         std::thread::spawn(|| {
-            for _ in 0..10 {
-                let _ = Command::new("notepad").spawn();
-                std::thread::sleep(std::time::Duration::from_secs(2));
+            for i in 0..10 {
+                // On Windows, we need to use "notepad.exe" explicitly
+                let _ = Command::new("notepad.exe").spawn();
+                std::thread::sleep(std::time::Duration::from_secs(1));
             }
         });
     }
@@ -409,9 +404,7 @@ impl NormalMode {
             AppState::Vedic(question) => question.draw(),
             AppState::HackerMode(hacker_mode, _) => hacker_mode.draw_hacker_ui(),
             AppState::Notepad(notepad) => notepad.draw(),
-            AppState::Chatbot(chatbot) => {
-                chatbot.draw();
-            }
+            AppState::Chatbot(chatbot) => chatbot.draw(),
         }
     }
 
@@ -553,16 +546,16 @@ impl NormalMode {
         let flash = if (get_time() * 10.0).sin() > 0.5 { 255 } else { 200 };
         
         draw_text("⚠️ CRITICAL SYSTEM ERROR ⚠️", 100.0, 150.0, 32.0, 
-                Color::from_rgba(255, 255, 0, flash));
+                 Color::from_rgba(255, 255, 0, flash));
         draw_text("VIRUS DETECTED - SYSTEM COMPROMISED", 80.0, 200.0, 28.0, 
-                Color::from_rgba(255, 255, 255, 255));
+                 Color::from_rgba(255, 255, 255, 255));
         draw_text("Type 'stop' to terminate...", 150.0, 300.0, 24.0, 
-                Color::from_rgba(255, 255, 255, 255));
+                 Color::from_rgba(255, 255, 255, 255));
         
         // Input field
         let input_bg = Rect::new(100.0, 350.0, 400.0, 40.0);
         draw_rectangle(input_bg.x, input_bg.y, input_bg.w, input_bg.h, 
-                    Color::from_rgba(0, 0, 0, 200));
+                      Color::from_rgba(0, 0, 0, 200));
         draw_text(&self.virus_text, input_bg.x + 10.0, input_bg.y + 28.0, 24.0, WHITE);
     }
 
@@ -588,19 +581,6 @@ impl NormalMode {
 
         // Draw taskbar
         self.draw_taskbar();
-    }
-
-    fn draw_animated_grid(&self) {
-        let grid_alpha = 0.1 + 0.05 * (self.grid_animation * 0.3).sin();
-        for i in 0..60 {
-            for j in 0..40 {
-                let x = i as f32 * 20.0;
-                let y = j as f32 * 20.0;
-                let wave_offset = ((x + y) * 0.01 + self.grid_animation * 0.5).sin() * 0.5 + 0.5;
-                let alpha = (grid_alpha * wave_offset * 255.0) as u8;
-                draw_rectangle(x, y, 1.0, 1.0, Color::from_rgba(100, 150, 255, alpha));
-            }
-        }
     }
 
     fn draw_title_bar(&self) {
@@ -645,16 +625,15 @@ impl NormalMode {
             
             // Inner glow
             draw_rectangle_lines(bg_rect.x + 1.0, bg_rect.y + 1.0, bg_rect.w - 2.0, bg_rect.h - 2.0, 1.0, 
-                               icon.accent_color);
+                                icon.accent_color);
             
-            // Draw icon texture with transparency
+            // Draw icon texture
             let texture_size = vec2(icon.rect.w * 0.6 * hover_scale, icon.rect.h * 0.6 * hover_scale);
             let texture_pos = vec2(
                 icon.rect.x + (icon.rect.w - texture_size.x) / 2.0,
                 icon.rect.y + 20.0 + animation_offset
             );
             
-            // Then draw the actual icon texture
             draw_texture_ex(
                 &icon.texture,
                 texture_pos.x,
@@ -677,7 +656,7 @@ impl NormalMode {
             
             // Label background
             draw_rectangle(label_x - 5.0, label_y - 18.0, label_width + 10.0, 20.0, 
-                          Color::from_rgba(0, 0, 0, 120));
+                            Color::from_rgba(0, 0, 0, 120));
             
             draw_text(&icon.label, label_x, label_y, 14.0, WHITE);
             
@@ -697,18 +676,18 @@ impl NormalMode {
         for i in 0..self.taskbar_height as i32 {
             let alpha = 200 - (i as f32 / self.taskbar_height * 50.0) as u8;
             draw_rectangle(0.0, taskbar_y + i as f32, screen_width(), 1.0, 
-                          Color::from_rgba(10, 20, 35, alpha));
+                        Color::from_rgba(10, 20, 35, alpha));
         }
         
         // Taskbar border
         draw_rectangle(0.0, taskbar_y, screen_width(), 2.0, 
-                      Color::from_rgba(0, 150, 255, 150));
+                    Color::from_rgba(0, 150, 255, 150));
         
         // System info section
         let info_text = format!("RETRO VM | {} | ESC to exit", self.time_display);
         let info_width = measure_text(&info_text, None, 16, 1.0).width;
         draw_text(&info_text, 20.0, taskbar_y + 25.0, 16.0, 
-                 Color::from_rgba(200, 220, 255, 255));
+                    Color::from_rgba(200, 220, 255, 255));
         
         // Status indicators
         let status_x = screen_width() - 200.0;
@@ -716,7 +695,7 @@ impl NormalMode {
         // CPU indicator (animated)
         let cpu_activity = 0.3 + 0.7 * (self.anime_effect_timer * 3.0).sin().abs();
         draw_text("CPU:", status_x, taskbar_y + 25.0, 14.0, 
-                 Color::from_rgba(150, 150, 150, 255));
+                    Color::from_rgba(150, 150, 150, 255));
         
         let cpu_bar_width = 60.0;
         let cpu_bar_height = 8.0;
@@ -724,63 +703,19 @@ impl NormalMode {
         let cpu_bar_y = taskbar_y + 15.0;
         
         draw_rectangle(cpu_bar_x, cpu_bar_y, cpu_bar_width, cpu_bar_height, 
-                      Color::from_rgba(40, 40, 60, 255));
+                    Color::from_rgba(40, 40, 60, 255));
         draw_rectangle(cpu_bar_x, cpu_bar_y, cpu_bar_width * cpu_activity, cpu_bar_height, 
-                      Color::from_rgba(0, 255, 150, 255));
+                    Color::from_rgba(0, 255, 150, 255));
         
         // Memory indicator
         let mem_activity = 0.6;
         draw_text("MEM:", status_x, taskbar_y + 45.0, 14.0, 
-                 Color::from_rgba(150, 150, 150, 255));
+                    Color::from_rgba(150, 150, 150, 255));
         
         let mem_bar_y = taskbar_y + 35.0;
         draw_rectangle(cpu_bar_x, mem_bar_y, cpu_bar_width, cpu_bar_height, 
-                      Color::from_rgba(40, 40, 60, 255));
+                    Color::from_rgba(40, 40, 60, 255));
         draw_rectangle(cpu_bar_x, mem_bar_y, cpu_bar_width * mem_activity, cpu_bar_height, 
-                      Color::from_rgba(255, 150, 0, 255));
-        
-        // Corner decoration
-        self.draw_corner_decorations();
-    }
-
-    fn draw_corner_decorations(&self) {
-        let corner_size = 30.0;
-        let corner_color = Color::from_rgba(0, 150, 255, 100);
-        
-        // Top-left corner
-        draw_rectangle_lines(10.0, 60.0, corner_size, corner_size, 2.0, corner_color);
-        draw_rectangle_lines(12.0, 62.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
-        
-        // Top-right corner
-        let top_right_x = screen_width() - corner_size - 10.0;
-        draw_rectangle_lines(top_right_x, 60.0, corner_size, corner_size, 2.0, corner_color);
-        draw_rectangle_lines(top_right_x + 2.0, 62.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
-        
-        // Bottom-left corner (above taskbar)
-        let bottom_y = screen_height() - self.taskbar_height - corner_size - 10.0;
-        draw_rectangle_lines(10.0, bottom_y, corner_size, corner_size, 2.0, corner_color);
-        draw_rectangle_lines(12.0, bottom_y + 2.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
-        
-        // Bottom-right corner (above taskbar)
-        draw_rectangle_lines(top_right_x, bottom_y, corner_size, corner_size, 2.0, corner_color);
-        draw_rectangle_lines(top_right_x + 2.0, bottom_y + 2.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
-        
-        // Center accent lines
-        let center_x = screen_width() / 2.0;
-        let center_y = screen_height() / 2.0;
-        let line_length = 40.0;
-        let line_offset = 100.0;
-        
-        // Animated accent lines
-        let line_alpha = (100.0 + 50.0 * (self.anime_effect_timer * 0.8).sin()) as u8;
-        let accent_color = Color::from_rgba(0, 255, 150, line_alpha);
-        
-        // Horizontal lines
-        draw_rectangle(center_x - line_length - line_offset, center_y - 1.0, line_length, 2.0, accent_color);
-        draw_rectangle(center_x + line_offset, center_y - 1.0, line_length, 2.0, accent_color);
-        
-        // Vertical lines
-        draw_rectangle(center_x - 1.0, center_y - line_length - line_offset, 2.0, line_length, accent_color);
-        draw_rectangle(center_x - 1.0, center_y + line_offset, 2.0, line_length, accent_color);
+                    Color::from_rgba(255, 150, 0, 255));
     }
 }

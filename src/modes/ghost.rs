@@ -793,25 +793,15 @@ impl GhostMode {
         cmd.args(&[
             "-m", &format!("{}", (self.ram_gb as u32) * 1024),
             "-smp", &self.cpu_cores.to_string(),
-            "-drive", "file=assets/kali_vm.qcow2,if=virtio",  // Use your pre-installed image
-            "-boot", "c",  // Boot from hard drive (not CD-ROM)
+            "-cdrom", &self.kali_iso_path,
+            "-boot", "d",
             "-vga", "virtio",
-            "-device", "virtio-net,netdev=net0",
-            "-netdev", "user,id=net0",
-            "-cpu", "host",
+            "-net", "nic",
+            "-net", "user",
+            "-cpu", "qemu64",
             "-accel", "tcg",
-            "-display", "gtk",  // Better display option
-            "-soundhw", "hda",  // Audio support
-            "-usb",  // USB support
-            "-device", "usb-tablet",  // Better mouse integration
+            "-display", "sdl",
         ]);
-
-        // Windows-specific flags
-        #[cfg(target_os = "windows")]
-        unsafe {
-            use std::os::windows::process::CommandExt;
-            cmd.creation_flags(0x08000000);  // CREATE_NO_WINDOW
-        }
 
         match cmd.spawn() {
             Ok(child) => {
@@ -825,6 +815,7 @@ impl GhostMode {
             }
         }
     }
+
     fn kill_vm(&mut self) {
         if let Some(mut child) = self.vm_process.take() {
             if let Err(e) = child.kill() {
