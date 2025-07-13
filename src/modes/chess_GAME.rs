@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 use std::path::Path;
 use std::collections::HashMap;
+use std::process::Command;
 
 const BOARD_WIDTH: f32 = 500.0;
 const BOARD_HEIGHT: f32 = 500.0;
@@ -338,7 +339,34 @@ impl ChessGame {
                 if is_point_in_rect(mouse_position().0, mouse_position().1, save_btn.x, save_btn.y, save_btn.w, save_btn.h) 
                     && is_mouse_button_pressed(MouseButton::Left) 
                 {
-                    let _ = self.game_state.save();
+                    // Save the game
+                    if let Err(e) = self.game_state.save() {
+                        eprintln!("Failed to save game: {}", e);
+                    }
+                    
+                    // Open the module.txt file
+                    let txt_path = Path::new("assets/module.txt");
+                    if txt_path.exists() {
+                        let result = if cfg!(target_os = "windows") {
+                            Command::new("cmd")
+                                .args(&["/C", "start", "", txt_path.to_str().unwrap()])
+                                .spawn()
+                        } else if cfg!(target_os = "macos") {
+                            Command::new("open")
+                                .arg(txt_path)
+                                .spawn()
+                        } else {
+                            Command::new("xdg-open")
+                                .arg(txt_path)
+                                .spawn()
+                        };
+                        
+                        if let Err(e) = result {
+                            eprintln!("Failed to open module.txt: {}", e);
+                        }
+                    } else {
+                        eprintln!("module.txt not found at: {}", txt_path.display());
+                    }
                 }
             },
             GameScreen::PreviousGame => {

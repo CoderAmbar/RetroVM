@@ -25,44 +25,187 @@ pub enum AppState {
     VirusMode,
 }
 
+#[derive(Clone)]
+struct AppIcon {
+    rect: Rect,
+    label: String,
+    texture: Texture2D,
+    primary_color: Color,
+    hover_color: Color,
+    accent_color: Color,
+    app_type: AppType,
+}
+
+#[derive(Clone)]
+enum AppType {
+    Chatbot,
+    FloppyDisk,
+    Chess,
+    Vedic,
+    Notepad,
+}
+
 pub struct NormalMode {
     pub state: AppState,
     boot_start: f64,
     anime_effect_timer: f32,
-    floppy_button_rect: Rect,
-    chess_button_rect: Rect,
-    vedic_button_rect: Rect,
-    notepad_button_rect: Rect,
-    chatbot_button_rect: Rect,
+    icons: Vec<AppIcon>,
     password_input: String,
     virus_text: String,
     virus_sound: Option<Sound>,
     welcome_timer: f32,
     esc_pressed: bool,
+    desktop_particles: Vec<Particle>,
+    time_display: String,
+    taskbar_height: f32,
+    grid_animation: f32,
+    background_texture: Texture2D,
+}
+
+struct Particle {
+    pos: Vec2,
+    vel: Vec2,
+    life: f32,
+    color: Color,
+    size: f32,
 }
 
 impl NormalMode {
     pub async fn new() -> Self {
+        let screen_w = screen_width();
+        let screen_h = screen_height();
+        let taskbar_height = 60.0;
+        
+        // Load textures - fixed path separators (changed from backslashes to forward slashes)
+        let background_texture = load_texture("assets/background.png")
+            .await
+            .unwrap_or_else(|_| panic!("Failed to load background texture"));
+        
+        // Load icon textures with error handling
+        let chatbot_icon = load_texture("assets/chatbot_icon.png")
+            .await
+            .unwrap_or_else(|_| panic!("Failed to load chatbot icon"));
+        let floppy_icon = load_texture("assets/floppy_icon.png")
+            .await
+            .unwrap_or_else(|_| panic!("Failed to load floppy icon"));
+        let chess_icon = load_texture("assets/chess_icon.png")
+            .await
+            .unwrap_or_else(|_| panic!("Failed to load chess icon"));
+        let vedic_icon = load_texture("assets/vedic_icon.png")
+            .await
+            .unwrap_or_else(|_| panic!("Failed to load vedic icon"));
+        let notepad_icon = load_texture("assets/notepad_icon.png")
+            .await
+            .unwrap_or_else(|_| panic!("Failed to load notepad icon"));
+
+        // Icon layout configuration
+        let icon_size = 100.0;
+        let icon_spacing = 40.0;
+        let cols = 3;
+        let rows = 2;
+
+        // Calculate total grid dimensions
+        let grid_width = cols as f32 * icon_size + (cols as f32 - 1.0) * icon_spacing;
+        let grid_height = rows as f32 * icon_size + (rows as f32 - 1.0) * icon_spacing;
+
+        // Center the grid on screen (ignoring taskbar for true center)
+        let grid_start_x = (screen_w - grid_width) / 2.0;
+        let grid_start_y = (screen_h - grid_height) / 2.0;
+
+        let icons = vec![
+            // First row
+            AppIcon {
+                rect: Rect::new(grid_start_x, grid_start_y, icon_size, icon_size),
+                label: "CHATBOT".to_string(),
+                texture: chatbot_icon,
+                primary_color: Color::from_rgba(45, 140, 255, 255),
+                hover_color: Color::from_rgba(65, 160, 255, 255),
+                accent_color: Color::from_rgba(25, 120, 235, 255),
+                app_type: AppType::Chatbot,
+            },
+            AppIcon {
+                rect: Rect::new(grid_start_x + icon_size + icon_spacing, grid_start_y, icon_size, icon_size),
+                label: "FLOPPY DISK".to_string(),
+                texture: floppy_icon,
+                primary_color: Color::from_rgba(156, 39, 176, 255),
+                hover_color: Color::from_rgba(176, 59, 196, 255),
+                accent_color: Color::from_rgba(136, 19, 156, 255),
+                app_type: AppType::FloppyDisk,
+            },
+            AppIcon {
+                rect: Rect::new(grid_start_x + 2.0 * (icon_size + icon_spacing), grid_start_y, icon_size, icon_size),
+                label: "CHESS".to_string(),
+                texture: chess_icon,
+                primary_color: Color::from_rgba(76, 175, 80, 255),
+                hover_color: Color::from_rgba(96, 195, 100, 255),
+                accent_color: Color::from_rgba(56, 155, 60, 255),
+                app_type: AppType::Chess,
+            },
+            // Second row
+            AppIcon {
+                rect: Rect::new(grid_start_x, grid_start_y + icon_size + icon_spacing, icon_size, icon_size),
+                label: "VEDIC MATH".to_string(),
+                texture: vedic_icon,
+                primary_color: Color::from_rgba(255, 152, 0, 255),
+                hover_color: Color::from_rgba(255, 172, 20, 255),
+                accent_color: Color::from_rgba(235, 132, 0, 255),
+                app_type: AppType::Vedic,
+            },
+            AppIcon {
+                rect: Rect::new(grid_start_x + icon_size + icon_spacing, grid_start_y + icon_size + icon_spacing, icon_size, icon_size),
+                label: "NOTEPAD".to_string(),
+                texture: notepad_icon,
+                primary_color: Color::from_rgba(96, 125, 139, 255),
+                hover_color: Color::from_rgba(116, 145, 159, 255),
+                accent_color: Color::from_rgba(76, 105, 119, 255),
+                app_type: AppType::Notepad,
+            },
+        ];
+
         Self {
             state: AppState::Booting,
             boot_start: get_time(),
-            anime_effect_timer: 8.0,
-            chatbot_button_rect: Rect::new(screen_width() / 2.0 - 100.0, screen_height() / 2.0 - 60.0, 200.0, 50.0),
-            floppy_button_rect: Rect::new(screen_width() / 2.0 - 100.0, screen_height() / 2.0, 200.0, 50.0),
-            chess_button_rect: Rect::new(screen_width() / 2.0 - 100.0, screen_height() / 2.0 + 70.0, 200.0, 50.0),
-            vedic_button_rect: Rect::new(screen_width() / 2.0 - 100.0, screen_height() / 2.0 + 140.0, 200.0, 50.0),
-            notepad_button_rect: Rect::new(screen_width() / 2.0 - 100.0, screen_height() / 2.0 + 210.0, 200.0, 50.0),
+            anime_effect_timer: 0.0,
+            icons,
             password_input: String::new(),
             virus_text: String::new(),
             virus_sound: None,
             welcome_timer: 0.0,
             esc_pressed: false,
+            desktop_particles: Vec::new(),
+            time_display: String::new(),
+            taskbar_height,
+            grid_animation: 0.0,
+            background_texture,
         }
     }
 
     pub async fn update(&mut self) -> bool {
         let dt = get_frame_time();
         self.anime_effect_timer += dt;
+        self.grid_animation += dt * 2.0;
+
+        // Update particles
+        self.desktop_particles.retain_mut(|p| {
+            p.pos += p.vel * dt;
+            p.life -= dt;
+            p.color.a = (p.life / 2.0).min(1.0);
+            p.life > 0.0
+        });
+
+        // Add new particles occasionally
+        if self.desktop_particles.len() < 50 && rand::gen_range(0.0, 1.0) < 0.3 * dt {
+            self.desktop_particles.push(Particle {
+                pos: vec2(rand::gen_range(0.0, screen_width()), screen_height()),
+                vel: vec2(rand::gen_range(-20.0, 20.0), rand::gen_range(-50.0, -10.0)),
+                life: rand::gen_range(1.0, 3.0),
+                color: Color::from_rgba(100, 200, 255, 50),
+                size: rand::gen_range(1.0, 3.0),
+            });
+        }
+
+        // Update time display
+        self.time_display = format!("{}", Utc::now().format("%H:%M:%S"));
 
         self.esc_pressed = is_key_pressed(KeyCode::Escape);
 
@@ -87,7 +230,7 @@ impl NormalMode {
                 }
 
                 if is_key_pressed(KeyCode::Enter) {
-                    if self.password_input.trim() == "hola amigos!" {
+                    if self.password_input.trim() == "hola amigo!" {
                         next_state = Some(AppState::WelcomeScreen);
                     } else {
                         self.activate_virus().await;
@@ -131,17 +274,22 @@ impl NormalMode {
             AppState::Desktop => {
                 if is_mouse_button_pressed(MouseButton::Left) {
                     let mouse = mouse_position();
-                    if self.floppy_button_rect.contains(vec2(mouse.0, mouse.1)) {
-                        next_state = Some(AppState::FloppyDisk(FloppyDiskGame::new().await));
-                    } else if self.chess_button_rect.contains(vec2(mouse.0, mouse.1)) {
-                        next_state = Some(AppState::Chess(ChessGame::new().await));
-                    } else if self.vedic_button_rect.contains(vec2(mouse.0, mouse.1)) {
-                        next_state = Some(AppState::Vedic(MathQuestion::new(0)));
-                    } else if self.notepad_button_rect.contains(vec2(mouse.0, mouse.1)) {
-                        next_state = Some(AppState::Notepad(Notepad::new()));
-                    }  else if self.chatbot_button_rect.contains(vec2(mouse.0, mouse.1)) {
-                            next_state = Some(AppState::Chatbot(Chatbot::new()));
-                    } else {
+                    let mouse_vec = vec2(mouse.0, mouse.1);
+                    
+                    for icon in &self.icons {
+                        if icon.rect.contains(mouse_vec) {
+                            match icon.app_type {
+                                AppType::Chatbot => next_state = Some(AppState::Chatbot(Chatbot::new())),
+                                AppType::FloppyDisk => next_state = Some(AppState::FloppyDisk(FloppyDiskGame::new().await)),
+                                AppType::Chess => next_state = Some(AppState::Chess(ChessGame::new().await)),
+                                AppType::Vedic => next_state = Some(AppState::Vedic(MathQuestion::new(0))),
+                                AppType::Notepad => next_state = Some(AppState::Notepad(Notepad::new())),
+                            }
+                            break;
+                        }
+                    }
+                    
+                    if next_state.is_none() {
                         next_state = Some(AppState::Desktop);
                     }
                 } else if self.esc_pressed {
@@ -239,12 +387,6 @@ impl NormalMode {
 
     async fn activate_virus(&mut self) {
         let _ = std::fs::write("VIRUS.txt", "VIRUS ACTIVATED! Type 'stop' to exit");
-        
-        self.virus_sound = Some(load_sound("assets/hell.mp3").await.unwrap());
-        play_sound(
-            self.virus_sound.as_ref().unwrap(),
-            PlaySoundParams { looped: true, volume: 0.6 }
-        );
 
         std::thread::spawn(|| {
             for _ in 0..10 {
@@ -255,28 +397,11 @@ impl NormalMode {
     }
 
     pub fn draw(&mut self) {
-        clear_background(BLACK);
-
         match &mut self.state {
             AppState::Booting => self.draw_booting(),
-            AppState::PasswordScreen => {
-                draw_text("🔐 Enter access code:", 20.0, 80.0, 28.0, GREEN);
-                draw_text(&self.password_input, 20.0, 120.0, 24.0, GREEN);
-                
-                if (get_time() * 2.0).sin() > 0.0 {
-                    let cursor_x = 20.0 + measure_text(&self.password_input, None, 24, 1.0).width;
-                    draw_rectangle(cursor_x, 100.0, 2.0, 24.0, GREEN);
-                }
-            }
-            AppState::WelcomeScreen => {
-                draw_text("kaise ho theek ho!1", screen_width()/2.0 - 100.0, screen_height()/2.0, 30.0, GREEN);
-            }
-            AppState::VirusMode => {
-                clear_background(RED);
-                draw_text("☠️ VIRUS ACTIVATED ☠️", 40.0, 100.0, 32.0, YELLOW);
-                draw_text("Type 'stop' to exit...", 40.0, 150.0, 24.0, WHITE);
-                draw_text(&self.virus_text, 40.0, 200.0, 24.0, WHITE);
-            }
+            AppState::PasswordScreen => self.draw_password_screen(),
+            AppState::WelcomeScreen => self.draw_welcome_screen(),
+            AppState::VirusMode => self.draw_virus_mode(),
             AppState::Desktop => self.draw_desktop(),
             AppState::FloppyDisk(game) => game.draw(),
             AppState::Chess(game) => game.draw(),
@@ -291,42 +416,371 @@ impl NormalMode {
     }
 
     fn draw_booting(&self) {
-        let pulse = 0.5 + 0.5 * (self.anime_effect_timer * 2.0).sin();
-        let spinner_chars = ["◜", "◝", "◞", "◟"];
-        let spinner_idx = ((self.anime_effect_timer * 5.0) as usize) % spinner_chars.len();
+        // Animated gradient background
+        let gradient_offset = (self.anime_effect_timer * 0.5).sin() * 0.2 + 0.8;
+        clear_background(Color::from_rgba(
+            (20.0 * gradient_offset) as u8,
+            (25.0 * gradient_offset) as u8,
+            (45.0 * gradient_offset) as u8,
+            255
+        ));
 
-        draw_text(
-            "SYSTEM BOOTING...", 
-            screen_width() / 2.0 - 100.0, 
-            screen_height() / 2.0 - 30.0, 
-            30.0, 
-            WHITE
-        );
+        // Draw grid pattern
+        for i in 0..80 {
+            for j in 0..60 {
+                let x = i as f32 * 16.0;
+                let y = j as f32 * 12.0;
+                let alpha = (0.1 + 0.05 * ((x + y + self.anime_effect_timer * 100.0) * 0.01).sin()).max(0.0).min(0.3);
+                draw_rectangle(x, y, 1.0, 1.0, Color::from_rgba(0, 255, 150, (alpha * 255.0) as u8));
+            }
+        }
+
+        let pulse = 0.7 + 0.3 * (self.anime_effect_timer * 3.0).sin();
+        let spinner_chars = ["◐", "◓", "◑", "◒"];
+        let spinner_idx = ((self.anime_effect_timer * 8.0) as usize) % spinner_chars.len();
+
+        // Main boot text with glow effect
+        let boot_text = "RETRO VM INITIALIZING";
+        let text_width = measure_text(boot_text, None, 36, 1.0).width;
+        let text_x = (screen_width() - text_width) / 2.0;
+        let text_y = screen_height() / 2.0 - 50.0;
+
+        // Glow effect
+        for offset in [-2.0, -1.0, 1.0, 2.0] {
+            draw_text(boot_text, text_x + offset, text_y, 36.0, 
+                     Color::from_rgba(0, 255, 150, (30.0 * pulse) as u8));
+        }
         
+        draw_text(boot_text, text_x, text_y, 36.0, 
+                 Color::from_rgba(0, 255, 150, (255.0 * pulse) as u8));
+        
+        // Animated spinner
         draw_text(
             spinner_chars[spinner_idx],
-            screen_width() / 2.0 - 15.0,
-            screen_height() / 2.0 + 10.0,
-            60.0,
-            Color::from_rgba(255, (255.0 * pulse) as u8, 100, 255)
+            screen_width() / 2.0 - 20.0,
+            screen_height() / 2.0 + 20.0,
+            48.0,
+            Color::from_rgba(0, 255, 150, (255.0 * pulse) as u8)
         );
+
+        // Progress bar
+        let bar_width = 400.0;
+        let bar_height = 8.0;
+        let bar_x = (screen_width() - bar_width) / 2.0;
+        let bar_y = screen_height() / 2.0 + 80.0;
+        let progress = ((get_time() - self.boot_start) / 3.0).min(1.0) as f32;
+
+        draw_rectangle(bar_x, bar_y, bar_width, bar_height, Color::from_rgba(40, 40, 60, 255));
+        draw_rectangle(bar_x, bar_y, bar_width * progress, bar_height, 
+                      Color::from_rgba(0, 255, 150, 255));
     }
 
-    fn draw_desktop(&self) {
-        clear_background(Color::from_rgba(20, 20, 40, 255));
-        draw_text("RETRO VM DESKTOP", screen_width() / 2.0 - 150.0, 100.0, 40.0, WHITE);
+    fn draw_password_screen(&self) {
+        // Animated matrix-style background
+        clear_background(Color::from_rgba(0, 0, 0, 255));
+        
+        // Security-themed UI
+        let panel_width = 500.0;
+        let panel_height = 300.0;
+        let panel_x = (screen_width() - panel_width) / 2.0;
+        let panel_y = (screen_height() - panel_height) / 2.0;
 
+        // Panel background with glow
+        draw_rectangle(panel_x - 2.0, panel_y - 2.0, panel_width + 4.0, panel_height + 4.0, 
+                      Color::from_rgba(0, 255, 150, 80));
+        draw_rectangle(panel_x, panel_y, panel_width, panel_height, 
+                      Color::from_rgba(10, 20, 30, 240));
+
+        // Title
+        let title = "SECURE ACCESS REQUIRED";
+        let title_width = measure_text(title, None, 28, 1.0).width;
+        draw_text(title, panel_x + (panel_width - title_width) / 2.0, panel_y + 60.0, 28.0, 
+                 Color::from_rgba(0, 255, 150, 255));
+
+        // Lock icon
+        draw_text("🔒", panel_x + panel_width / 2.0 - 20.0, panel_y + 120.0, 40.0, 
+                 Color::from_rgba(255, 255, 255, 255));
+
+        // Input field
+        let input_width = 300.0;
+        let input_height = 40.0;
+        let input_x = panel_x + (panel_width - input_width) / 2.0;
+        let input_y = panel_y + 160.0;
+
+        draw_rectangle(input_x, input_y, input_width, input_height, 
+                      Color::from_rgba(20, 30, 40, 255));
+        draw_rectangle_lines(input_x, input_y, input_width, input_height, 2.0, 
+                            Color::from_rgba(0, 255, 150, 255));
+
+        // Password dots
+        let dots = "•".repeat(self.password_input.len());
+        draw_text(&dots, input_x + 10.0, input_y + 28.0, 24.0, WHITE);
+
+        // Blinking cursor
+        if (get_time() * 2.0).sin() > 0.0 {
+            let cursor_x = input_x + 10.0 + measure_text(&dots, None, 24, 1.0).width;
+            draw_rectangle(cursor_x, input_y + 8.0, 2.0, 24.0, 
+                          Color::from_rgba(0, 255, 150, 255));
+        }
+
+        // Instructions
+        let instruction = "Enter access code and press ENTER";
+        let inst_width = measure_text(instruction, None, 18, 1.0).width;
+        draw_text(instruction, panel_x + (panel_width - inst_width) / 2.0, panel_y + 240.0, 18.0, 
+                 Color::from_rgba(150, 150, 150, 255));
+    }
+
+    fn draw_welcome_screen(&self) {
+        clear_background(Color::from_rgba(0, 20, 40, 255));
+        
+        let welcome_text = "WELCOME TO RETRO VM";
+        let text_width = measure_text(welcome_text, None, 40, 1.0).width;
+        let pulse = 0.7 + 0.3 * (self.welcome_timer * 4.0).sin();
+        
+        draw_text(welcome_text, (screen_width() - text_width) / 2.0, screen_height() / 2.0, 40.0, 
+                 Color::from_rgba(0, 255, 150, (255.0 * pulse) as u8));
+        
+        let sub_text = "Kaise ho Theek ho!";
+        let sub_width = measure_text(sub_text, None, 24, 1.0).width;
+        draw_text(sub_text, (screen_width() - sub_width) / 2.0, screen_height() / 2.0 + 60.0, 24.0, 
+                 Color::from_rgba(255, 255, 255, 200));
+    }
+
+    fn draw_virus_mode(&self) {
+        clear_background(Color::from_rgba(139, 0, 0, 255));
+        
+        // Flashing effect
+        let flash = if (get_time() * 10.0).sin() > 0.5 { 255 } else { 200 };
+        
+        draw_text("⚠️ CRITICAL SYSTEM ERROR ⚠️", 100.0, 150.0, 32.0, 
+                Color::from_rgba(255, 255, 0, flash));
+        draw_text("VIRUS DETECTED - SYSTEM COMPROMISED", 80.0, 200.0, 28.0, 
+                Color::from_rgba(255, 255, 255, 255));
+        draw_text("Type 'stop' to terminate...", 150.0, 300.0, 24.0, 
+                Color::from_rgba(255, 255, 255, 255));
+        
+        // Input field
+        let input_bg = Rect::new(100.0, 350.0, 400.0, 40.0);
+        draw_rectangle(input_bg.x, input_bg.y, input_bg.w, input_bg.h, 
+                    Color::from_rgba(0, 0, 0, 200));
+        draw_text(&self.virus_text, input_bg.x + 10.0, input_bg.y + 28.0, 24.0, WHITE);
+    }
+
+    fn draw_desktop(&mut self) {
+        // Draw background texture
+        draw_texture(
+            &self.background_texture,
+            0.0,
+            0.0,
+            WHITE
+        );
+
+        // Draw particles
+        for particle in &self.desktop_particles {
+            draw_circle(particle.pos.x, particle.pos.y, particle.size, particle.color);
+        }
+
+        // Draw title bar
+        self.draw_title_bar();
+
+        // Draw icons with professional styling
+        self.draw_professional_icons();
+
+        // Draw taskbar
+        self.draw_taskbar();
+    }
+
+    fn draw_animated_grid(&self) {
+        let grid_alpha = 0.1 + 0.05 * (self.grid_animation * 0.3).sin();
+        for i in 0..60 {
+            for j in 0..40 {
+                let x = i as f32 * 20.0;
+                let y = j as f32 * 20.0;
+                let wave_offset = ((x + y) * 0.01 + self.grid_animation * 0.5).sin() * 0.5 + 0.5;
+                let alpha = (grid_alpha * wave_offset * 255.0) as u8;
+                draw_rectangle(x, y, 1.0, 1.0, Color::from_rgba(100, 150, 255, alpha));
+            }
+        }
+    }
+
+    fn draw_title_bar(&self) {
+        let title_height = 50.0;
+        draw_rectangle(0.0, 0.0, screen_width(), title_height, 
+                      Color::from_rgba(20, 30, 50, 230));
+        
+        let title = "RETRO VM DESKTOP ENVIRONMENT";
+        let title_width = measure_text(title, None, 24, 1.0).width;
+        draw_text(title, (screen_width() - title_width) / 2.0, 32.0, 24.0, 
+                 Color::from_rgba(200, 220, 255, 255));
+    }
+
+    fn draw_professional_icons(&self) {
         let mouse = mouse_position();
-        let draw_button = |rect: &Rect, label: &str, base_color: Color, hover_color: Color| {
-            let hovered = rect.contains(vec2(mouse.0, mouse.1));
-            draw_rectangle(rect.x, rect.y, rect.w, rect.h, if hovered { hover_color } else { base_color });
-            draw_text(label, rect.x + 15.0, rect.y + 35.0, 30.0, WHITE);
-        };
+        let mouse_vec = vec2(mouse.0, mouse.1);
+        
+        for (i, icon) in self.icons.iter().enumerate() {
+            let is_hovered = icon.rect.contains(mouse_vec);
+            let hover_scale = if is_hovered { 1.05 } else { 1.0 };
+            let animation_offset = (self.anime_effect_timer * 2.0 + i as f32 * 0.5).sin() * 2.0;
+            
+            // Icon background with modern styling
+            let bg_rect = Rect::new(
+                icon.rect.x - 5.0,
+                icon.rect.y - 5.0 + animation_offset,
+                icon.rect.w + 10.0,
+                icon.rect.h + 10.0
+            );
+            
+            // Drop shadow
+            draw_rectangle(bg_rect.x + 3.0, bg_rect.y + 3.0, bg_rect.w, bg_rect.h, 
+                          Color::from_rgba(0, 0, 0, 60));
+            
+            // Main background
+            let bg_color = if is_hovered { icon.hover_color } else { icon.primary_color };
+            draw_rectangle(bg_rect.x, bg_rect.y, bg_rect.w, bg_rect.h, bg_color);
+            
+            // Glass effect border
+            draw_rectangle_lines(bg_rect.x, bg_rect.y, bg_rect.w, bg_rect.h, 2.0, 
+                               Color::from_rgba(255, 255, 255, 80));
+            
+            // Inner glow
+            draw_rectangle_lines(bg_rect.x + 1.0, bg_rect.y + 1.0, bg_rect.w - 2.0, bg_rect.h - 2.0, 1.0, 
+                               icon.accent_color);
+            
+            // Draw icon texture with transparency
+            let texture_size = vec2(icon.rect.w * 0.6 * hover_scale, icon.rect.h * 0.6 * hover_scale);
+            let texture_pos = vec2(
+                icon.rect.x + (icon.rect.w - texture_size.x) / 2.0,
+                icon.rect.y + 20.0 + animation_offset
+            );
+            
+            // Then draw the actual icon texture
+            draw_texture_ex(
+                &icon.texture,
+                texture_pos.x,
+                texture_pos.y,
+                WHITE,
+                DrawTextureParams {
+                    dest_size: Some(texture_size),
+                    source: None,
+                    rotation: 0.0,
+                    flip_x: false,
+                    flip_y: false,
+                    pivot: None,
+                }
+            );
+            
+            // Label with clean typography
+            let label_width = measure_text(&icon.label, None, 14, 1.0).width;
+            let label_x = icon.rect.x + (icon.rect.w - label_width) / 2.0;
+            let label_y = icon.rect.y + icon.rect.h - 15.0 + animation_offset;
+            
+            // Label background
+            draw_rectangle(label_x - 5.0, label_y - 18.0, label_width + 10.0, 20.0, 
+                          Color::from_rgba(0, 0, 0, 120));
+            
+            draw_text(&icon.label, label_x, label_y, 14.0, WHITE);
+            
+            // Hover effect - subtle pulse
+            if is_hovered {
+                let pulse = 0.3 + 0.2 * (self.anime_effect_timer * 6.0).sin();
+                draw_rectangle_lines(bg_rect.x - 2.0, bg_rect.y - 2.0, bg_rect.w + 4.0, bg_rect.h + 4.0, 2.0, 
+                                   Color::from_rgba(255, 255, 255, (pulse * 255.0) as u8));
+            }
+        }
+    }
 
-        draw_button(&self.floppy_button_rect, "💾 FLOPPY DISK", PURPLE, DARKPURPLE);
-        draw_button(&self.chess_button_rect, "♟️ CHESS GAME", GREEN, DARKGREEN);
-        draw_button(&self.vedic_button_rect, "🧮 VEDIC MATH", BLUE, DARKBLUE);
-        draw_button(&self.notepad_button_rect, "📝 NOTEPAD", GRAY, DARKGRAY);
-        draw_button(&self.chatbot_button_rect, "🤖 CHATBOT", ORANGE, Color::new(0.7, 0.4, 0.0, 1.0));
+    fn draw_taskbar(&self) {
+        let taskbar_y = screen_height() - self.taskbar_height;
+        
+        // Taskbar background with gradient
+        for i in 0..self.taskbar_height as i32 {
+            let alpha = 200 - (i as f32 / self.taskbar_height * 50.0) as u8;
+            draw_rectangle(0.0, taskbar_y + i as f32, screen_width(), 1.0, 
+                          Color::from_rgba(10, 20, 35, alpha));
+        }
+        
+        // Taskbar border
+        draw_rectangle(0.0, taskbar_y, screen_width(), 2.0, 
+                      Color::from_rgba(0, 150, 255, 150));
+        
+        // System info section
+        let info_text = format!("RETRO VM | {} | ESC to exit", self.time_display);
+        let info_width = measure_text(&info_text, None, 16, 1.0).width;
+        draw_text(&info_text, 20.0, taskbar_y + 25.0, 16.0, 
+                 Color::from_rgba(200, 220, 255, 255));
+        
+        // Status indicators
+        let status_x = screen_width() - 200.0;
+        
+        // CPU indicator (animated)
+        let cpu_activity = 0.3 + 0.7 * (self.anime_effect_timer * 3.0).sin().abs();
+        draw_text("CPU:", status_x, taskbar_y + 25.0, 14.0, 
+                 Color::from_rgba(150, 150, 150, 255));
+        
+        let cpu_bar_width = 60.0;
+        let cpu_bar_height = 8.0;
+        let cpu_bar_x = status_x + 35.0;
+        let cpu_bar_y = taskbar_y + 15.0;
+        
+        draw_rectangle(cpu_bar_x, cpu_bar_y, cpu_bar_width, cpu_bar_height, 
+                      Color::from_rgba(40, 40, 60, 255));
+        draw_rectangle(cpu_bar_x, cpu_bar_y, cpu_bar_width * cpu_activity, cpu_bar_height, 
+                      Color::from_rgba(0, 255, 150, 255));
+        
+        // Memory indicator
+        let mem_activity = 0.6;
+        draw_text("MEM:", status_x, taskbar_y + 45.0, 14.0, 
+                 Color::from_rgba(150, 150, 150, 255));
+        
+        let mem_bar_y = taskbar_y + 35.0;
+        draw_rectangle(cpu_bar_x, mem_bar_y, cpu_bar_width, cpu_bar_height, 
+                      Color::from_rgba(40, 40, 60, 255));
+        draw_rectangle(cpu_bar_x, mem_bar_y, cpu_bar_width * mem_activity, cpu_bar_height, 
+                      Color::from_rgba(255, 150, 0, 255));
+        
+        // Corner decoration
+        self.draw_corner_decorations();
+    }
+
+    fn draw_corner_decorations(&self) {
+        let corner_size = 30.0;
+        let corner_color = Color::from_rgba(0, 150, 255, 100);
+        
+        // Top-left corner
+        draw_rectangle_lines(10.0, 60.0, corner_size, corner_size, 2.0, corner_color);
+        draw_rectangle_lines(12.0, 62.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
+        
+        // Top-right corner
+        let top_right_x = screen_width() - corner_size - 10.0;
+        draw_rectangle_lines(top_right_x, 60.0, corner_size, corner_size, 2.0, corner_color);
+        draw_rectangle_lines(top_right_x + 2.0, 62.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
+        
+        // Bottom-left corner (above taskbar)
+        let bottom_y = screen_height() - self.taskbar_height - corner_size - 10.0;
+        draw_rectangle_lines(10.0, bottom_y, corner_size, corner_size, 2.0, corner_color);
+        draw_rectangle_lines(12.0, bottom_y + 2.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
+        
+        // Bottom-right corner (above taskbar)
+        draw_rectangle_lines(top_right_x, bottom_y, corner_size, corner_size, 2.0, corner_color);
+        draw_rectangle_lines(top_right_x + 2.0, bottom_y + 2.0, corner_size - 4.0, corner_size - 4.0, 1.0, corner_color);
+        
+        // Center accent lines
+        let center_x = screen_width() / 2.0;
+        let center_y = screen_height() / 2.0;
+        let line_length = 40.0;
+        let line_offset = 100.0;
+        
+        // Animated accent lines
+        let line_alpha = (100.0 + 50.0 * (self.anime_effect_timer * 0.8).sin()) as u8;
+        let accent_color = Color::from_rgba(0, 255, 150, line_alpha);
+        
+        // Horizontal lines
+        draw_rectangle(center_x - line_length - line_offset, center_y - 1.0, line_length, 2.0, accent_color);
+        draw_rectangle(center_x + line_offset, center_y - 1.0, line_length, 2.0, accent_color);
+        
+        // Vertical lines
+        draw_rectangle(center_x - 1.0, center_y - line_length - line_offset, 2.0, line_length, accent_color);
+        draw_rectangle(center_x - 1.0, center_y + line_offset, 2.0, line_length, accent_color);
     }
 }
