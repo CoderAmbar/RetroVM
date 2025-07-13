@@ -39,6 +39,34 @@
 | `netscan`   | Scans Wi-Fi interfaces and browser extensions; uses ML to identify threats. |
 | `vault`     | SHA-256 password hash vault; verifies hashes without storing plaintext. |
 
+
+🔐 Terminal Modules & Commands
+Command	Description
+phishgen	Phishing Website Generator: Generates a fake login page using HTML templates in Rust. Tunnels it online using Ngrok, logs credentials in real-time.
+netscan	AI-Powered Network Scanner: Uses Python + trained ML model (via scikit-learn + xgboost) and NLP techniques with nltk to scan for:
+
+Risky Wi-Fi names (SSID fingerprinting)
+
+Suspicious browser extensions (parsed using BeautifulSoup)
+
+Detects potential keylogging patterns and trackers via page content scraping |
+| footscan | Digital Footprint Scanner: Uses OSINT and metadata extraction to simulate how attackers might gather passive data about you online. |
+| vault | Password Hash Vault: Accepts input, hashes it with SHA-256 using Rust’s crypto lib. Decryption only simulated via input match. |
+| ngoltek | Combines Ngrok with simulated attacker endpoint logic. Shows users how malicious tunnels can be used for C2 (Command and Control). |
+
+🧠 Under the Hood (Tech Used)
+✅ Rust for the terminal engine (tui), fake site host (warp), and secure modules
+
+✅ Python for ML/NLP backend:
+
+nltk for tokenizing Wi-Fi SSIDs / extension names
+
+BeautifulSoup for browser extension parsing
+
+sentence-transformers to semantically understand extension descriptions
+
+Pre-trained model classifies risk levels (e.g., “Tracker”, “Suspicious Ad Injector”)
+
 ---
 
 ### 📝 Tools & Embedded Learning
@@ -176,30 +204,6 @@ We welcome contributions and provide support for our community.
 * **Documentation**: Comprehensive documentation for all features is encouraged.
 * **Testing**: Thorough testing of all functionality is essential.
 * **Review Process**: All code changes will undergo a review and approval process.
-
----
-
-## 📚 Documentation & Resources
-
-Access comprehensive guides and community support.
-
-### User Guides
-* **Getting Started**: A complete beginner's guide to using the application.
-* **Advanced Features**: Detailed documentation of advanced functionality.
-* **Troubleshooting**: Solutions for common issues and problems.
-* **FAQ**: Frequently asked questions and answers.
-
-### Technical Documentation
-* **API Reference**: Complete API documentation for developers.
-* **Architecture Guide**: Insights into the technical architecture and design decisions.
-* **Performance Guide**: Optimization tips and best practices.
-* **Security Guide**: Security considerations and best practices.
-
-### Community Resources
-* **Forums**: Community discussion and support forums.
-* **Wiki**: A community-maintained documentation and guides.
-* **Video Tutorials**: Step-by-step video guides and tutorials.
-* **Blog**: Development updates and announcements.
 
 ---
 
