@@ -161,77 +161,201 @@ project/
 📝 Installation & Setup Guide
 ==============================
 
-Get Retro VM running with these straightforward steps. This setup enables you to use the embedded Kali Linux VM, QEMU support, and unlock the app's full cybersecurity simulation capabilities.
+Retro VM is a gamified cybersecurity simulation app built with Rust and Python. Follow the steps below to install, configure, and run it on your system.
 
-
+----------------------------
 System Requirements
 ----------------------------
-- Operating System: Windows 10+, macOS 10.15+, or Linux (Ubuntu 18.04+)
-- RAM: 8 GB minimum (16 GB recommended for virtual machine operations)
-- Storage: 5 GB free space
-- Processor: Multi-core CPU (4+ cores recommended with virtualization enabled)
-- Graphics: DirectX 11 or OpenGL 3.3+ compatible GPU
 
-Installation Steps
+- OS: Windows 10+, macOS 10.15+, or Linux (Ubuntu 18.04+)
+- RAM: 8 GB minimum (16 GB recommended)
+- Storage: 5 GB+ free
+- CPU: Multi-core (4+ cores, virtualization supported)
+- GPU: DirectX 11 or OpenGL 3.3+ compatible
+- Tools Required:
+  * Git
+  * Python 3.8+
+  * Rust (via rustup)
+  * QEMU
+  * Ngrok
+
+Step-by-Step Installation
 ----------------------------
 
-1. DOWNLOAD RETRO VM
-   - Get the latest release from the official repository or release archive.
-   - Extract/unzip to your desired installation directory.
+1. CLONE THE PROJECT FROM GITHUB
+   $ git clone https://github.com/Cyberpunk-San/osdc.git
+   $ cd osdc
 
-2. SETUP ASSETS FOLDER
-   Ensure the following directory structure inside your project folder:
+2. INSTALL PYTHON DEPENDENCIES
+   $ pip install -r requirements.txt
 
-   /assets
-   ├── kali-linux.iso           → Kali Linux bootable installer ISO
-   ├── kali-linux.qcow2         → QEMU virtual disk image (optional or created via CLI)
-   └── qemu/
-       ├── qemu-system-x86_64   → QEMU executable
-       └── supporting binaries  → Necessary DLLs or shared libs
+3. INSTALL RUST (IF NOT INSTALLED)
+   $ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+   $ rustup update
+   $ cargo --version
 
-3. DOWNLOAD KALI LINUX ISO
-   - Visit: https://www.kali.org/get-kali/
-   - Download: “Kali Linux 64-bit Installer (ISO)”
-   - Rename and place the file in: /assets/kali-linux.iso
+4. DOWNLOAD KALI LINUX ISO
+   - Go to https://www.kali.org/get-kali/
+   - Download "Kali Linux 64-bit Installer (ISO)"
+   - Place it in: /assets/kali-linux.iso
 
-4. INSTALL QEMU
-   - For Windows: https://qemu.weilnetz.de/w64/
-   - For macOS: Install via Homebrew
-       $ brew install qemu
-   - For Ubuntu/Linux:
-       $ sudo apt update && sudo apt install qemu qemu-kvm
+5. SETUP QEMU
+   - Download QEMU for your OS:
+     * Windows: https://qemu.weilnetz.de/w64/
+     * macOS: `brew install qemu`
+     * Linux: `sudo apt install qemu qemu-kvm`
+   - Create a directory: /assets/qemu/
+   - Place the QEMU binary in that folder:
+     Example: /assets/qemu/qemu-system-x86_64
 
-   - Place the QEMU binary in: /assets/qemu/qemu-system-x86_64
+6. CREATE QCOW2 VIRTUAL DISK
+   $ qemu-img create -f qcow2 assets/kali-linux.qcow2 30G
 
-5. CREATE QCOW2 VIRTUAL DISK (if not included)
-   - Open a terminal and run:
-       $ qemu-img create -f qcow2 kali-linux.qcow2 30G
-   - This creates a 30GB virtual disk.
-   - Move this file into the /assets/ directory.
+7. BUILD THE PROJECT
+   $ cargo build --release
 
-6. LAUNCH THE APP
-   - Run the main executable (retro_vm.exe or equivalent).
-   - Enter Ghost Mode and press SHIFT + D to boot Kali Linux using QEMU.
+8. RUN RETRO VM
+   $ cargo run
 
-First-Time Configuration
+Optional Notes
 ----------------------------
 
-- The built-in setup wizard will:
-   * Detect the Kali ISO and QEMU binary
-   * Prompt for virtual disk path (qcow2)
-   * Allow resource allocation (RAM, CPU cores)
-   * Test VM boot sequence
-   * Enable customization of themes and security settings
+- To run in release mode (faster):
+   $ cargo run --release
+
+- To rebuild:
+   $ cargo clean
+   $ cargo build
 
 ----------------------------
-Verify Setup
+Folder Structure Overview
 ----------------------------
-- Confirm these components are working:
-   * Normal and Ghost modes
-   * Virtual machine boots correctly
-   * Notepad, Encryption, and Hacker Terminal accessible
-   * Hidden terminal activated via Ctrl+H → Ctrl+Alt+G
 
+  /assets/
+  ├── kali-linux.iso           (Bootable Kali image)
+  ├── kali-linux.qcow2         (QEMU virtual disk)
+  └── qemu/
+      └── qemu-system-x86_64   (QEMU binary)
+
+🔐 Hidden Features & Easter Eggs (Retro VM) Summary
+==================================================
+
+Retro VM is packed with hidden cybersecurity tools and gamified challenges. Below is a complete list of hidden features, how to unlock them, and what each one teaches.
+
+------------------------------------------------
+1. 🔥 Ghost Mode (From Main Menu)
+------------------------------------------------
+- Description:
+  Switches interface to stealth mode with animated ghost visuals.
+- Activation:
+  Select “Ghost Mode” on the home screen.
+- Purpose:
+  Enables access to advanced tools including the VM launcher.
+
+------------------------------------------------
+2. 🖥️ Kali Linux Virtual Machine
+------------------------------------------------
+- Description:
+  Launches Kali Linux using QEMU in a sandboxed virtual environment.
+- Activation:
+  Inside Ghost Mode → Press `Shift + D`
+- Requirements:
+  `/assets/kali-linux.iso` and a `kali-linux.qcow2` file.
+- Purpose:
+  Safe and isolated environment to practice ethical hacking techniques.
+
+------------------------------------------------
+3. 🧠 Fake Virus Simulator
+------------------------------------------------
+- Description:
+  A security prank that mimics a malware outbreak.
+- Trigger:
+  Enter any password **except** `hola amigos!` in Normal Mode login.
+- Effect:
+  Spawns multiple Notepad windows simulating a virus.
+- Exit:
+  Type `stop` on the main screen to terminate.
+
+------------------------------------------------
+4. 📓 SHA-256 Notepad
+------------------------------------------------
+- Description:
+  Secure notepad that hashes user text using SHA-256.
+- Features:
+  - Hashing and internal decryption.
+  - Decryption only allowed inside the app.
+- Purpose:
+  Teaches irreversible hashing and secure data entry.
+
+------------------------------------------------
+5. 🤖 1996-Style Chatbot (Ollama)
+------------------------------------------------
+- Description:
+  Retro terminal-based chatbot built with Ollama + Transformers.
+- Theme:
+  Classic terminal UI mimicking late-90s shell interactions.
+- Use Case:
+  Acts as a retro-styled AI mentor for cybersecurity and math logic.
+
+------------------------------------------------
+6. 🧮 Vedic Math Game → Unlock Hacker Terminal
+------------------------------------------------
+- Description:
+  Math challenge with a reward system.
+- Activation Path:
+  - Score ≥ 2048 → Press `Ctrl + H` → screen darkens.
+  - Then press `Ctrl + Alt + G` → Hacker Terminal opens.
+
+------------------------------------------------
+7. 🖥️ Hacker Terminal (Rust-powered CLI)
+------------------------------------------------
+- Description:
+  Advanced command-line tools for simulated ethical hacking.
+- Key Commands:
+  - `phishgen`   → Generates phishing sites + tunnels via Ngrok.
+  - `netscan`    → Network scanner using NLP (NLTK) and XGBoost model.
+  - `footscan`   → Digital footprint + metadata scanner.
+  - `vault`      → Password manager with SHA-256 encryption.
+  - `ngoltek`    → Simulates attacker tunnel behavior using Ngrok logic.
+- Purpose:
+  Learn red teaming, scanning, phishing, and footprinting.
+
+------------------------------------------------
+8. ♟️ Cyber Chess (with Hacking Module)
+------------------------------------------------
+- Description:
+  Classic chess interface with an integrated cybersecurity knowledge drop.
+- Hidden Feature:
+  Clicking the "Save" button opens an interactive learning module on ethical hacking topics.
+- Purpose:
+  Gamifies security awareness while testing logic skills.
+
+------------------------------------------------
+9. 💾 Floppy Disk Game (Steganography Challenge)
+------------------------------------------------
+- Description:
+  A mini-game teaching steganography through play.
+- Objective:
+  Navigate and reach the goal to securely embed hidden text into an image.
+- If You Win:
+  → Image is encrypted using steganography (text is embedded inside).
+- If You Lose:
+  → The image is saved in raw binary format and the secret text is NOT recoverable.
+- Purpose:
+  Demonstrates real-world risks of improper encryption and hidden data manipulation.
+
+------------------------------------------------
+🎉 Bonus Easter Eggs
+------------------------------------------------
+- Secret terminal phrases like:
+  - `sudo hacktheplanet`
+  - `initiate legacy mode`
+  - `unlock darklayer`
+- May trigger animations, ASCII art, system sounds, or rare messages.
+
+------------------------------------------------
+💡 Tip:
+Every layer of Retro VM is designed like a real-world capture-the-flag (CTF) environment. Exploration = education.
 ----------------------------
 Support & Contribution
 ----------------------------
@@ -241,26 +365,3 @@ Support & Contribution
 
 Enjoy Retro VM – your gamified, retro-infused ethical hacking simulator!
 
----
-
-## 🎯 Conclusion
-
-Retro VM stands as a testament to the seamless integration of nostalgia and modern utility. It offers users a uniquely comprehensive virtual machine management experience, enveloped in a captivating retro aesthetic. From casual gaming to rigorous penetration testing, this application provides a cohesive journey through different computing eras, all while adhering to the stringent security and performance standards of contemporary software.
-
-The intelligently layered authentication system, subtly integrated hidden features, and an expansive application suite create an engaging experience that rewards exploration and curiosity. Whether you're reliving the golden age of pixel art gaming or performing serious security research, Retro VM provides the quintessential tools and an immersive atmosphere to make your computing endeavors both productive and profoundly enjoyable.
-
-**Key Highlights:**
-* **Comprehensive Application Suite**: Five fully-featured, meticulously designed applications.
-* **Dual-Mode Architecture**: Intuitive Normal and the enigmatic Ghost modes, with hidden access to powerful functionalities.
-* **Professional VM Management**: Full-fledged Kali Linux virtualization for serious work.
-* **Authentic Retro Design**: True pixel-perfect 8-bit aesthetics that transport you back in time.
-* **Cultural Integration**: Meaningful references and subtle Easter eggs that enrich the user experience.
-* **Security Focus**: Robust security and privacy protections ensuring a safe and isolated environment.
-
-**The Secret Path**: Always remember, the true power of Retro VM resides within its hidden depths. Begin your journey with the welcoming **Normal Mode**, uncover the mysterious **Ghost Mode**, and ultimately unlock the professional capabilities of the hidden **Hacker Mode** using the **Shift + D** hotkey. Each layer you reveal will unveil new possibilities and deeper, more profound functionality.
-
-*"In the intersection of past and present, where pixels meet possibility, Retro VM creates a bridge between the computing dreams of yesterday and the technological realities of today."*
-
----
-
-**Happy Computing! 🚀👻🔓**
