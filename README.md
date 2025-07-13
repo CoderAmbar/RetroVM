@@ -157,53 +157,91 @@ project/
 
 ---
 
-## 📝 Installation & Setup
+==============================
+📝 Installation & Setup Guide
+==============================
 
-Get Retro VM up and running quickly with these straightforward steps.
+Get Retro VM running with these straightforward steps. This setup enables you to use the embedded Kali Linux VM, QEMU support, and unlock the app's full cybersecurity simulation capabilities.
 
-### System Requirements
-* **Operating System**: Windows 10+, macOS 10.15+, or Linux (Ubuntu 18.04+).
-* **RAM**: Minimum **8GB** (16GB recommended for VM operations).
-* **Storage**: **5GB** free space for complete installation.
-* **Processor**: Multi-core processor (4+ cores recommended).
-* **Graphics**: DirectX 11 compatible graphics card.
+----------------------------
+System Requirements
+----------------------------
+- Operating System: Windows 10+, macOS 10.15+, or Linux (Ubuntu 18.04+)
+- RAM: 8 GB minimum (16 GB recommended for virtual machine operations)
+- Storage: 5 GB free space
+- Processor: Multi-core CPU (4+ cores recommended with virtualization enabled)
+- Graphics: DirectX 11 or OpenGL 3.3+ compatible GPU
 
-### Installation Steps
-1.  **Download**: Obtain the latest release from the official repository.
-2.  **Extract**: Unzip the application files to your desired location.
-3.  **Assets**: Ensure all asset files are correctly placed within the specified directory structure.
-4.  **Dependencies**: Install any required system dependencies (e.g., QEMU).
-5.  **Launch**: Run the main executable to start the Retro VM application.
+----------------------------
+Installation Steps
+----------------------------
 
-### Configuration
-* **First Run**: An initial setup wizard will guide you through system configuration.
-* **VM Setup**: Download and configure the Kali Linux ISO as prompted.
-* **Preferences**: Customize settings for optimal performance and user experience.
-* **Testing**: Verify all features are working correctly after setup.
+1. DOWNLOAD RETRO VM
+   - Get the latest release from the official repository or release archive.
+   - Extract/unzip to your desired installation directory.
 
----
+2. SETUP ASSETS FOLDER
+   Ensure the following directory structure inside your project folder:
 
-## 🤝 Contributing & Support
+   /assets
+   ├── kali-linux.iso           → Kali Linux bootable installer ISO
+   ├── kali-linux.qcow2         → QEMU virtual disk image (optional or created via CLI)
+   └── qemu/
+       ├── qemu-system-x86_64   → QEMU executable
+       └── supporting binaries  → Necessary DLLs or shared libs
 
-We welcome contributions and provide support for our community.
+3. DOWNLOAD KALI LINUX ISO
+   - Visit: https://www.kali.org/get-kali/
+   - Download: “Kali Linux 64-bit Installer (ISO)”
+   - Rename and place the file in: /assets/kali-linux.iso
 
-### Bug Reports
-* **Issue Tracking**: Please use GitHub issues for all bug reports.
-* **Detailed Reports**: Include system information and clear reproduction steps.
-* **Screenshots**: Provide visual evidence of issues when applicable.
-* **Log Files**: Include relevant log files and error messages.
+4. INSTALL QEMU
+   - For Windows: https://qemu.weilnetz.de/w64/
+   - For macOS: Install via Homebrew
+       $ brew install qemu
+   - For Ubuntu/Linux:
+       $ sudo apt update && sudo apt install qemu qemu-kvm
 
-### Feature Requests
-* **Enhancement Proposals**: Suggest new features and improvements.
-* **Community Voting**: Community input will help prioritize feature development.
-* **Development Timeline**: We aim to provide realistic timelines for feature implementation.
-* **Testing**: We encourage community testing of new features.
+   - Place the QEMU binary in: /assets/qemu/qemu-system-x86_64
 
-### Development Guidelines
-* **Code Style**: Adhere to consistent coding standards and practices.
-* **Documentation**: Comprehensive documentation for all features is encouraged.
-* **Testing**: Thorough testing of all functionality is essential.
-* **Review Process**: All code changes will undergo a review and approval process.
+5. CREATE QCOW2 VIRTUAL DISK (if not included)
+   - Open a terminal and run:
+       $ qemu-img create -f qcow2 kali-linux.qcow2 30G
+   - This creates a 30GB virtual disk.
+   - Move this file into the /assets/ directory.
+
+6. LAUNCH THE APP
+   - Run the main executable (retro_vm.exe or equivalent).
+   - Enter Ghost Mode and press SHIFT + D to boot Kali Linux using QEMU.
+
+----------------------------
+First-Time Configuration
+----------------------------
+
+- The built-in setup wizard will:
+   * Detect the Kali ISO and QEMU binary
+   * Prompt for virtual disk path (qcow2)
+   * Allow resource allocation (RAM, CPU cores)
+   * Test VM boot sequence
+   * Enable customization of themes and security settings
+
+----------------------------
+Verify Setup
+----------------------------
+- Confirm these components are working:
+   * Normal and Ghost modes
+   * Virtual machine boots correctly
+   * Notepad, Encryption, and Hacker Terminal accessible
+   * Hidden terminal activated via Ctrl+H → Ctrl+Alt+G
+
+----------------------------
+Support & Contribution
+----------------------------
+- For bugs: Submit a GitHub issue with logs and steps to reproduce
+- For feature suggestions: Open a discussion or enhancement proposal
+- For development: Follow code style, test thoroughly, and document your changes
+
+Enjoy Retro VM – your gamified, retro-infused ethical hacking simulator!
 
 ---
 
