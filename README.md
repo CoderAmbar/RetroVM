@@ -37,7 +37,6 @@
 | `phishgen`  | Generates phishing page via `warp`, tunnels through Ngrok, logs captured credentials. |
 | `footscan`  | Simulates OSINT-based digital footprint scanning. |
 | `netscan`   | Scans Wi-Fi interfaces and browser extensions; uses ML to identify threats. |
-| `vault`     | SHA-256 password hash vault; verifies hashes without storing plaintext. |
 
 
 🔐 Terminal Modules & Commands
