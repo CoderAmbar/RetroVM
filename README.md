@@ -157,13 +157,13 @@ project/
 
 ---
 
-==============================
+
 📝 Installation & Setup Guide
 ==============================
 
 Get Retro VM running with these straightforward steps. This setup enables you to use the embedded Kali Linux VM, QEMU support, and unlock the app's full cybersecurity simulation capabilities.
 
-----------------------------
+
 System Requirements
 ----------------------------
 - Operating System: Windows 10+, macOS 10.15+, or Linux (Ubuntu 18.04+)
@@ -172,7 +172,6 @@ System Requirements
 - Processor: Multi-core CPU (4+ cores recommended with virtualization enabled)
 - Graphics: DirectX 11 or OpenGL 3.3+ compatible GPU
 
-----------------------------
 Installation Steps
 ----------------------------
 
@@ -214,7 +213,6 @@ Installation Steps
    - Run the main executable (retro_vm.exe or equivalent).
    - Enter Ghost Mode and press SHIFT + D to boot Kali Linux using QEMU.
 
-----------------------------
 First-Time Configuration
 ----------------------------
 
