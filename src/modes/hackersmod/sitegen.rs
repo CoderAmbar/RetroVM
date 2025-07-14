@@ -1,6 +1,12 @@
+// sitegen.rs
 use dialoguer::{theme::ColorfulTheme, Select};
 
-pub fn generate_html(brand: &str, business: &str, logo_url: &str, theme: &str) -> String {
+pub fn generate_html(
+    brand: &str, 
+    business: &str, 
+    logo_url: &str, 
+    theme: &str
+) -> String {
     let (bg, text_color, accent, shadow) = match theme {
         "blue_cyberpunk" => ("#0a0f2c", "#00ffff", "#00aaff", "#00f0ff"),
         "amber_terminal" => ("#1b140b", "#ffbf00", "#ffcc00", "#ffea00"),
@@ -21,7 +27,7 @@ pub fn generate_html(brand: &str, business: &str, logo_url: &str, theme: &str) -
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>{brand} - Retro Login</title>
+    <title>{brand} - Security Training</title>
     <style>
         body {{
             background-color: {bg};
@@ -77,7 +83,8 @@ pub fn generate_html(brand: &str, business: &str, logo_url: &str, theme: &str) -
             <button type="submit">ACCESS</button>
         </form>
         <div class="warning">
-            ⚠️ This is a fake login page generated for educational use only.
+            ⚠️ SECURITY TRAINING: This is a simulated login page for educational purposes only.
+            Do not enter real credentials.
         </div>
     </div>
 </body>
@@ -100,7 +107,7 @@ pub fn select_template() -> String {
     ];
 
     let selection = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("🎨 Choose a template theme")
+        .with_prompt("Select a theme for security training")
         .items(&templates)
         .default(0)
         .interact()

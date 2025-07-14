@@ -6,9 +6,13 @@ pub enum GhostAction {
 }
 
 pub fn show_main_menu() -> GhostAction {
-    let options = &["🎯 Launch Phishing Campaign", "❌ Exit"];
+    let options = &[
+        "🔒 Launch Security Training Simulation",  // Changed label to be more ethical
+        "❌ Exit"
+    ];
+    
     let selection = Select::with_theme(&ColorfulTheme::default())
-        .with_prompt("GhostOps Main Menu")
+        .with_prompt("Security Training Toolkit")
         .default(0)
         .items(options)
         .interact()
