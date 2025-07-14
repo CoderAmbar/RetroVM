@@ -126,15 +126,15 @@ Used for ML-based scanning and chatbot backend:
 ```
 project/
 ├── assets/
-│   ├── kali-linux.iso
+│   ├── kali-linux.iso│   
+│   ├── kali-qcow2
 │   └── qemu/
 │       └── qemu-system-x86_64(.exe)
 ├── src/
 │   ├── main.rs
-│   ├── server.rs
-│   ├── ngrok.rs
-│   ├── tui.rs
-│   └── ...
+│   ├── modes
+│   ├── models
+│   ├── servers
 ├── requirements.txt
 ├── Cargo.toml
 └── README.txt
@@ -352,15 +352,6 @@ Retro VM is packed with hidden cybersecurity tools and gamified challenges. Belo
   → The image is saved in raw binary format and the secret text is NOT recoverable.
 - Purpose:
   Demonstrates real-world risks of improper encryption and hidden data manipulation.
-
-------------------------------------------------
-🎉 Bonus Easter Eggs
-------------------------------------------------
-- Secret terminal phrases like:
-  - `sudo hacktheplanet`
-  - `initiate legacy mode`
-  - `unlock darklayer`
-- May trigger animations, ASCII art, system sounds, or rare messages.
 
 ------------------------------------------------
 💡 Tip:
