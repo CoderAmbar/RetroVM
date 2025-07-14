@@ -236,19 +236,6 @@ Optional Notes
    $ cargo clean
    $ cargo build
 
-----------------------------
-Folder Structure Overview
-----------------------------
-
-  /assets/
-  ├── kali-linux.iso           (Bootable Kali image)
-  ├── kali-linux.qcow2         (QEMU virtual disk)
-  └── qemu/
-      └── qemu-system-x86_64   (QEMU binary)
-
-🔐 Hidden Features & Easter Eggs (Retro VM) Summary
-==================================================
-
 Retro VM is packed with hidden cybersecurity tools and gamified challenges. Below is a complete list of hidden features, how to unlock them, and what each one teaches.
 
 ------------------------------------------------
