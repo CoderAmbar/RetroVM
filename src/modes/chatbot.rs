@@ -1,4 +1,3 @@
-// In chatbot.rs (replace the current content with this)
 use macroquad::prelude::*;
 use reqwest::blocking::Client;
 use serde::{Deserialize, Serialize};
@@ -216,11 +215,9 @@ Use 90s slang, attitude, and sass. Act like you're chatting on a green CRT termi
             y += LINE_HEIGHT;
         }
 
-        // Input box
         draw_rectangle(40.0, screen_height() - 50.0, screen_width() - 80.0, 30.0, DARKGRAY);
         draw_text(&format!("> {}", self.input), 50.0, screen_height() - 30.0, FONT_SIZE, WHITE);
 
-        // Cursor blink
         self.blink_timer += get_frame_time();
         if self.blink_timer > 0.5 {
             self.show_cursor = !self.show_cursor;
