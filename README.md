@@ -3,6 +3,10 @@
 **Retro VM+** is a cross-platform Rust and Python-powered cybersecurity simulator that blends gamification with real-world ethical hacking tools. Designed to teach, test, and entertain, the app includes hidden features, retro-style terminals, virtualization, ML-based network analysis, and embedded games – all geared toward providing practical cybersecurity exposure.
 
 ---
+## DEMO VIDEO
+
+https://www.youtube.com/watch?v=beIokbakJOA
+---
 
 ## 🧩 Core Features
 
