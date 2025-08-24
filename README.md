@@ -356,3 +356,4 @@ Support & Contribution
 
 Enjoy Retro VM – your gamified, retro-infused ethical hacking simulator!
 
+![Winning Certificate](./OSDHACK)
